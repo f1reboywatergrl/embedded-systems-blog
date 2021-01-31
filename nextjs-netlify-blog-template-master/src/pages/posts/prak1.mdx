@@ -4,6 +4,71 @@ title: Praktikum 1 - Blinking Light on ESP32 Board
 date: 2021-01-25
 author: vincentiussgk
 tags:
-  - document
+  - ESP32
+  - LED
 ---
 
+## Overview Praktikum
+
+Pada minggu kedua ini, kami ditugaskan untuk membuat sebuah proyek "Hello World", yakni menyalakan lampu LED built-in pada board ESP32 DEVKIT V1 menggunakan software
+Arduino IDE. Lampu itu kemudian dibuat "berkedip", berganti antara hidup dan mati setiap 1000 milisekon. 
+
+## Alat dan Bahan
+
+Pada pengerjaan praktikum pertama ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. Breadboard 800 titik (opsional, 1 buah), sebagai penyanggah perangkat ESP32
+
+sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+
+## Skema Perangkat Praktikum
+
+Berikut adalah skema perangkat pada praktikum ini, baik perangkat keras maupun perangkat lunak.
+
+<img src="/images/Praktikum/Prak 1/skema1.png" style={{width:'15rem',height:'30rem'}}/>
+
+## Kode Program
+
+<img src="/images/Praktikum/Prak 1/Code_1.png"/>
+
+Selanjutnya, mari kita bahas kode software yang digunakan pada praktikum ini. 
+Karena ini masih praktikum pertama kita, maka mari kita lihat struktur kodenya satu-persatu.
+
+Kode untuk menjalankan ESP32 lazimnya dibagi menjadi 2 bagian, atau tepatnya 2 fungsi, yakni fungsi ``setup`` dan fungsi ``loop``.
+
+Pada bagian ``setup``, perintah yang diberikan akan dijalankan **tepat satu kali**, yakni ketika awal inisiasi perangkat. Dalam kasus ini
+kita memanggil perintah ``pinMode`` dengan parameter ``LED_BUILTIN, OUTPUT``. Artinya, kita memberitahu program bahwa output utama dari program ini
+akan keluar pada lampu LED yang sudah *built-in* pada perangkat ESP32 kita.
+
+Selanjutnya, pada bagian ``loop``, perintah yang diberikan akan **dijalankan secara terus-menerus**, sampai perangkat dimatikan atau koneksi dengan *software* terputus.
+Dalam kasus ini, kita memanggil perintah ``digitalWrite`` pada ``LED_BUILTIN`` dengan nilai ``HIGH``. Artinya, kita mengeset **voltase** dari lampu
+LED built-in menjadi tinggi, dengan kata lain **menyalakannya**. Program kemudian akan berhenti selama 1000 milisekon karena pemanggilan perintah ``delay``.
+Fungsi ini memiliki parameter waktu dengan satuan **milisekon**. Akhirnya, program akan menjalankan kembali perintah ``digitalWrite`` seperti pada 
+perintah pertama, namun kali ini nilainya adalah ``LOW``, dengan kata lain kita **mematikan** lampu LED pada perangkat. Setelah jeda 1 detik, perintah pada
+fungsi ``loop`` akan berulang, dan lampu akan dinyalakan kembali, begitu seterusnya.
+
+## Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/gsftULYAgGw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Analisis Hasil Eksperimen
+
+Untuk merangkum kembali praktikum ini, kita telah mempelejari struktur program ESP32 yang terbagi atas 2 fungsi, ``setup`` dan ``loop``, dan mempelajari
+cara mengakses LED built-in pada perangkat ESP32 DEVKIT V1, serta menyalakan dan mematikannya dengan interval tertentu. 
+
+Hasil output dapat terlihat pada lampu LED built-in ESP32 karena program diperintahkan pada perintah ``pinMode`` dalam fungsi ``setup`` 
+untuk mengeset output pada LED bult-in. Peristiwa mati-nyalanya lampu diakibatkan oleh perintah ``digitalWrite`` pada fungsi ``loop`` 
+yang berfungsi mengeset voltase LED menjadi tinggi atau rendah sesuai parameter yang diberikan. Karena kedua fungsi ini berada pada ``loop``,
+ maka akan diulang selamanya.
+
+Dalam percobaan ini ada sebuah langkah yang opsional yang saya lakukan, yakni menekan tombol ``BOOT`` ketika sedang meng-upload kode ke ESP32 (dapat dilihat pada
+video). Disini saya menekan tombol ``BOOT`` karena sepertinya port pada Arduino IDE saya bermasalah ketika *uploading* kode ke ESP32. 
+Tombol ``BOOT`` ini berguna untuk meng-upload *firmware* secara manual menuju board ESP32. Lazimnya, jika perangkat keras maupun 
+perangkat lunak Anda tidak bermasalah, langkah ini tidak diperlukan.
