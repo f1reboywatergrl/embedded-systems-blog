@@ -1,6 +1,7 @@
 import Head from "next/head";
 import config from "../../lib/config";
-
+const siteTitle:string = "Embedded Systems Blog";
+const siteDesc:string = "A compilation of blogs about my activities in the Embedded Systems course.";
 type Props = {
   url: string;
   title?: string;
@@ -19,15 +20,15 @@ export default function OpenGraphMeta({
       <meta property="og:url" content={config.base_url + url} />
       <meta
         property="og:title"
-        content={title ? [title, config.site_title].join(" | ") : ""}
+        content={title ? [title, siteTitle].join(" | ") : ""}
       />
       <meta
         property="og:description"
-        content={description ? description : config.site_description}
+        content={siteDesc}
       />
       <meta
         property="og:image"
-        content={image ? image : config.base_url + "/og_image.png"}
+        content={"/icon.png"}
       />
       <meta property="og:type" content="article" />
     </Head>

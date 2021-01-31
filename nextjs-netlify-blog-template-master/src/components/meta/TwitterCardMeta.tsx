@@ -1,6 +1,7 @@
 import config from "../../lib/config";
 import Head from "next/head";
-
+const siteTitle:string = "Embedded Systems Blog";
+const siteDesc:string = "A compilation of blogs about my activities in the Embedded Systems course.";
 type Props = {
   url: string;
   title?: string;
@@ -14,11 +15,11 @@ export default function TwitterCardMeta({ url, title, description }: Props) {
       <meta property="twitter:url" content={config.base_url + url} />
       <meta
         property="twitter:title"
-        content={title ? [title, config.site_title].join(" | ") : ""}
+        content={title ? [title, siteTitle].join(" | ") : ""}
       />
       <meta
         property="twitter:description"
-        content={description ? description : config.site_description}
+        content={siteDesc}
       />
     </Head>
   );
