@@ -2,7 +2,7 @@ import Head from "next/head";
 import config from "../../lib/config";
 
 const siteTitle:string = "Embedded Systems Blog";
-
+const siteDesc:string = "A compilation of blogs about my activities in the Embedded Systems course.";
 type Props = {
   title?: string;
   description?: string;
@@ -24,7 +24,7 @@ export default function BasicMeta({
       </title>
       <meta
         name="description"
-        content={description ? description : config.site_description}
+        content={description ? description : siteDesc}
       />
       <meta
         name="keywords"
