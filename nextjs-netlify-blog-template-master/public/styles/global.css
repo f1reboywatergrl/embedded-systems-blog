@@ -41,3 +41,15 @@ a:hover {
   top: 0;
   left: 0;
 }
+
+body::-webkit-scrollbar-track{
+  background: #a09da4; 
+}
+
+body::-webkit-scrollbar-thumb{
+  background: #000;
+}
+
+body::-webkit-scrollbar{
+  width: 0.35rem;
+}
