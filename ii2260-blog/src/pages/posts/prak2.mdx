@@ -1,0 +1,130 @@
+---
+slug: prak2
+title: Praktikum 2 - Digital I/O and GPIO Functions
+date: 2021-02-01
+author: vincentiussgk
+tags:
+  - ESP32
+  - LED
+  - I/O
+---
+
+## Overview Praktikum
+
+Pada minggu ketiga , kami ditugaskan untuk membuat sebuah proyek yang memanfaatkan proses I/O (Input/Output) sederhana
+menggunakan bantuan *button*. Dengan menekan *button* tersebut, pengguna dapat menyalakan lampu, dan ketika pengguna melepas 
+jarinya dari *button* tersebut, maka lampu LED akan padam.
+
+### Modifikasi Praktikum
+
+Pada praktikum ini, saya membuat sedikit modifikasi selain modul yang diwajibkan. Saya menambah sumber input menjadi 3 *button*, menambah
+jumlah lampu LED menjadi 2 buah, dan mengubah fungsionalitas tombol-tombol yang ada. Masing-masing LED dikontrol oleh 1 tombol, dan jika tombol
+ketiga ditekan, maka tombol pertama akan mengontrol LED kedua, dan tombol kedua akan mengontrol LED pertama, sebaliknya jika tombol ketiga ditekan lagi.
+
+## Alat dan Bahan
+
+Pada pengerjaan praktikum pertama ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. Breadboard 800 titik (1 buah), sebagai penyanggah rangkaian praktikum
+4. Lampu LED (1 buah, 2 buah untuk modifikasi praktikum), sebagai tempat keluarnya *output* dari rangkaian
+5. Tombol (1 buah, 3 buah untuk modifikasi praktikum), sebagai tempat masuknya *input* dari pengguna
+6. Kabel Male-to-Female **dan** Male-to-Male (minimal 5 buah), sebagai penghubung rangkaian praktikum
+7. Resistor 330 Ohm (minimal 2 buah), sebagai penyedia tegangan listrik
+8. Resistor 10 kOhm (opsional, bisa menggunakan resistor 330 ohm juga), sebagai penyedia tegangan listrik
+
+sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+
+## Skema Perangkat Praktikum
+
+Seperti pada praktikum pertama, berikut adalah skema perangkat pada praktikum ini, baik perangkat keras maupun perangkat lunak.
+
+<img src="/images/Praktikum/Prak 2/skema2_ori.PNG"/>
+
+Kita telah mengetahui bahwa perangkat Komputer berkomunikasi dengan ESP32 melalui kode program.
+Pada praktikum kali ini, kita meletakkan komponen-komponen kita di atas Breadboard, yakni Lampu LED Eskternal dan Tombol,
+yang dihubungkan dengan ESP32 melalui kabel. Setiap lampu dan tombol juga diberikan resistor supaya bisa mendapatkan tegangan listrik,
+dan dengan demikian membuat mereka dapat berfungsi dengan baik. Untuk mengaktifkan rangkaian, maka pengguna harus "menutup" rangkaian
+yang telah dibuat dengan cara menekan tombol, dimana hal tersebut akan dibaca oleh kode yang telah diberikan pada ESP32, yang kemudian akan
+mengubah voltase pada lampu LED eskternal sesuai kondisi tombol.
+
+Pada modifikasi praktikum, rangkaian yang dibuat serupa, namun dengan tambahan lampu LED menjadi 2, tombol menjadi 3, dan resistor menjadi 5.
+## Kode Program
+
+<img src="/images/Praktikum/Prak 2/code_ori.PNG"/>
+
+Mari membahas kode yang digunakan pada praktikum ini. Pada praktikum kali ini, kita
+memiliki 1 sumber input (tombol) dan 1 sumber output (lampu LED). Maka kita mendeklarasikan
+input/output tersebut pada bagian ``setup``, sesuai dengan angka GPIO masing-masing. Karena
+dalam kasus ini saya menggunakan GPIO4 untuk membaca input tombol dan GPIO5 untuk mengakses lampu LED,
+maka saya mendeklarasikannya demikian.
+
+Pada bagian ``loop``, kita membaca input dari tombol dengan perintah ``digitalRead``. Kita kemudian memeriksa nilai yang kita baca tersebut.
+Jika ``HIGH``, maka menandakan tombol sedang ditekan, sehingga nyalakan lampu LED. Jika tombol dilepas, maka akan bernilai ``LOW``, sehingga
+kita mematikan LED.
+
+### Kode Program Modifikasi
+
+<img src="/images/Praktikum/Prak 2/code_modif.PNG"/>
+
+Kode ini merupakan modifikasi program sebelumnya, dengan hasil seperti yang telah saya jelaskan pada bagian
+``Modifikasi Praktikum``. Pada bagian deklarasi variable, kita menambahkan beberapa konstanta untuk tambahan ``port`` yang akan kita gunakan,
+dalam kasus ini saya menggunakan ``port`` 14, 15, dan 18. Kita juga mendeklarasikan 2 variable ``currentButtonState`` dan ``lastButtonState``
+yang akan membantu men-*toggle* tombol ketiga kita.
+
+Pada bagian ``setup``, karena sumber I/O kita tidak hanya 1, maka kita buat deklarasi untuk masing-masing sumber. Khusus untuk ``reverseButton``, tombol
+yang akan mengubah fungsi dari 2 tombol lainnya, karena ia merupakan tombol *toggle*, maka inputnya berupa ``INPUT_PULLUP``.
+
+Lalu, pada bagian ``loop``, kita akan membagi pembahasannya menjadi beberapa bagian. Pertama, mari kita lihat bagian awal ``loop``. Disini
+kita mengeset nilai ``lastButtonState`` menjadi ``currentButtonState``, dan kemudian *menimpa* nilai ``currentButtonState`` dengan hasil pembacaan
+tombol ketiga. Kedua nilai ini akan berguna untuk memastikan fungsionalitas *toggle* yang dimiliki tombol ketiga, karena apabila hanya diperiksa menggunakan
+``digitalRead`` biasa, maka *toggle* tidak dapat dipastikan 100% jalan. Dengan memastikan bahwa *state* dari tombol memang berlawanan dengan sebelumnya,
+maka kita bisa kemudian memanipulasi ``reverseState`` dan lampu LED built-in. Untuk referensi selengkapnya pada bagian *toggle* bisa dibaca
+lebih lanjut pada pranala [berikut](https://arduinogetstarted.com/tutorials/arduino-button-toggle-led).
+
+Sekarang, perhatikan percabangan yang dibuat. Percabangan pertama setelah pemeriksaan ``reverseState`` berfungsi untuk 
+menyalakan ``ledPin2``, atau lampu berwarna kuning. Lampu tersebut hanya akan menyala apabila tombol di sebelahnya, ``buttonPin2``, sedang ditekan,
+dan fungsionalitas tombol tersebut belum diubah, atau jika ``buttonPin`` ditekan, dan fungsionalitas tombol telah diubah. Begitu pula dengan percabangan
+di bawahnya.
+
+## Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut:
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/Mu75doUIoM0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/><br/>
+<img src="/images/Praktikum/Prak 2/press.jpg" style={{width:'19.4rem',height:'14.5425rem'}}/>
+
+*Lampu LED eksternal berwarna biru yang menyala akibat tombol ditekan*
+
+dan hasil modifikasi percobaan ini dapat dilihat sebagai berikut:
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/Bc63NGOr1do" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/><br/>
+<img src="/images/Praktikum/Prak 2/press_modif_ob.jpg" style={{width:'19.4rem',height:'14.5425rem'}}/>
+
+*Lampu LED berwarna kuning yang menyala akibat tombol di sebelahnya*
+<br/>
+<img src="/images/Praktikum/Prak 2/press_modif_rev.jpg" style={{width:'19.4rem',height:'14.5425rem'}}/>
+
+*Lampu LED berwarna merah yang menyala akibat tombol yang telah ditukar perannya*
+## Analisis Hasil Eksperimen
+
+Untuk merangkum kembali praktikum ini, kita telah mempelejari I/O digital pada ESP32 dengan
+bantuan tombol sebagai sumber *input* dan lampu LED eksternal sebagai sumber *output*, serta cara mengaturnya pada ``setup``. Kita telah belajar bahwa
+menyalakan lampu LED dapat ketika tombol ditekan, dapat diimplementasikan dengan membaca (``digitalRead``) tombol,
+dan jika tombol tersebut ditekan, maka nilainya ``HIGH``, sehingga nyalakan lampunya. 
+
+Kemudian, pada modifikasi praktikum, kita belajar cara mengimplementasikan fitur *toggle* dengan tombol menggunakan pembacaan ``INPUT_PULLUP``, serta cara mengubah
+fungsionalitas tombol menggunakan percabangan logika.
+
+Dalam percobaan ini, saya sempat mengalami kendala pada modifikasi percobaan, secara spesifik pada bagian *toggle*.
+Awalnya, saya hanya melakukan ``digitalRead`` pada setiap iterasi ``loop``. Namun, setelah saya perhatikan, ternyata pendekatan ini
+tidak sempurna, karena tergantung sepenuhnya pada *timing* yang pas. Jika tombol ditekan **setelah** loop sudah melewati fungsi ``digitalRead``,
+maka lampu LED Built-in tidak dapat di-*toggle*. Saya kemudian mencari cara untuk membuat pembacaan *toggle* ini sebagai
+``event-based``. Saya akhirnya menemukan cara yang **tidak** ``event-based``, namun tetap memberikan solusi yang menyelesaikan masalah saya,
+yakni dengan ``INPUT_PULLUP`` dan pemeriksaan *logic* sebelum mengubah *state* dari LED built-in.

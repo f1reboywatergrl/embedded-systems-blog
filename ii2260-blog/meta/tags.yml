@@ -3,3 +3,5 @@ tags:
     name: ESP32
   - slug: LED
     name: LED
+  - slug: I/O
+    name: I/O
