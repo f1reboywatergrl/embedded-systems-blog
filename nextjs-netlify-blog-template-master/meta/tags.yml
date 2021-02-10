@@ -5,3 +5,5 @@ tags:
     name: LED
   - slug: I/O
     name: I/O
+  - slug: Sensor
+    name: Sensor

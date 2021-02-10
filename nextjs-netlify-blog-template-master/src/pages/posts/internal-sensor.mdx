@@ -1,0 +1,208 @@
+---
+slug: internal-sensor
+title: Praktikum 3 - Internal Sensor in ESP32
+date: 2021-02-08
+author: vincentiussgk
+tags:
+  - ESP32
+  - LED
+  - I/O
+  - Sensor
+---
+
+## Overview Praktikum
+
+Pada praktikum kali ini kita akan membuat sebuah project untuk mempelajari kinerja sensor pada ESP32, dengan fokus pada sensor internal yang
+sudah *built-in* terlebih dahulu. Kita akan membuat 2 rangkaian terpisah, dimana rangkaian pertama akan memfokuskan tentang sensor *touch* atau sentuh,
+dan rangkaian kedua akan memofkuskan tentang sensor *Hall*, yang bisa mendeteksi medan magnet di sekitarnya. 
+
+Input sentuhan akan diterima melalui kabel yang terhubung dengan suatu *port* GPIO yang dibaca dengan perintah ``touchRead()``, dan input 
+magnetis akan diterima melalui komponen pada ESP32 yang berwarna abu-abu yang terletak di tengah perangkat. Dengan *input* berupa sentuhan ataupun
+medan magnetis, kita akan memvisualisasikan *output* kita dengan bantuan lampu LED eksternal.
+
+Pertama, mari kita bahas sedikit lebih lanjut mengenai sensor Hall. Sensor ini dimanfaatkan untuk mendeteksi medan magnetis, dimana sensor akan
+mengemisikan voltase dengan nilai yang ditentukan berdasarkan kutub yang mendekatinya. Jika kita mendekatkan kutub selatan magnet pada sensor ini,
+maka voltase yang dihasilkan akan bernilai positif, dan sebaliknya jika kutub utara magnet yang didekatkan pada sensor. Sensor ini memiliki
+aplikasi dunia nyata seperti:
+
+- Pendeteksian lingkungan sekitar
+- Perhitungan posisi
+- Menghitung jumlah revolusi sebuah roda
+- Pendeteksian pintu menutup
+
+Penjelasan lebih lanjut mengenai sensor Hall dapat dilihat [disini](https://www.azosensors.com/article.aspx?ArticleID=16).
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum, dan sebagai perangkat yang mengandung sensor
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. Breadboard 800 titik (1 buah), sebagai penyanggah rangkaian praktikum
+4. Lampu LED (minimal 2 buah), sebagai tempat keluarnya *output* dari rangkaian
+6. Kabel Male-to-Female **dan** Male-to-Male (minimal 5 buah), sebagai penghubung rangkaian praktikum
+7. Resistor 330 Ohm (minimal 2 buah), sebagai penyedia hambatan untuk menghasilkan tegangan listrik jika dialiri arus
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+
+untuk bagian Touch sensor maupun Hall sensor.
+
+## Skema Perangkat Praktikum
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+### *Touch Sensor*
+<br/>
+<img src="/images/Praktikum/Prak 3/Touch_Schematic.png"/>
+
+Disini kita dapat melihat skema untuk rangkaian *Touch Sensor*. Rangkaian yang kita miliki
+di sini memiliki 2 input, yakni kabel yang terhubung dengan GPIO4 untuk menerima input **ON** dan kabel yang terhubung dengan GPIO14
+untuk menerima input **OFF**. Kita akan memberikan input sentuh dengan menyentuh ujung kabel yang dibiarkan bebas,
+sehingga sangat disarankan bahwa ujung yang bebas ini adalah *male*. Dari segi *output*, kita memiliki 3 buah lampu LED. Ketiga lampu
+LED ini dihubungkan pada RX2 (16) untuk warna merah, GPIO18 untuk warna biru, dan GPIO19 untuk warna kuning.
+Ketika sensor menerima input ON saat kita menyentuh kabel yang terhubung dengan GPIO4, maka lampu akan menyala dengan urutan
+R-B-Y, dan ketika kita menyentuh kabel yang terhubung dengan GPIO14, maka lampu akan padam dengan urutan
+Y-B-R.
+
+### *Hall Sensor*
+<br/>
+<img src="/images/Praktikum/Prak 3/Hall_Schematic.png" />
+Gambar di atas memperlihatkan skema untuk rangkaian Hall Sensor. Rangkaian ini akan menerima input 
+magnetis pada bagian tengah komponen ESP32 yang berbentuk persegi dan berwarna abu-abu/sedikit gelap.
+Ketika kita dekatkan sebuah magnet pada bagian tersebut, maka akan ada voltase yang terbaca oleh sensor.
+
+Pada rangkaian ini, terdapat 3 buah *state* rangkaian, yakni: 
+
+- ketika tidak ada magnet yang didekatkan dengan rangkaian, dimana lampu LED Built-in akan menyala
+- ketika kutub selatan magnet didekatkan dengan rangkaian, dimana lampu merah (terhubung dengan GPIO16 / RX2) akan menyala
+- ketika kutub utara magnet didekatkan dengan rangkaian, dimana lampu kuning (terhubung dengan GPIO4) akan menyala
+
+Penjelasan lebih lanjut mengenai cara kerja sensor akan dibahas pada pembahasan kode program 
+di bagian selanjutnya.
+
+## Kode Program
+### *Touch Sensor*
+<br/>
+<img src="/images/Praktikum/Prak 3/Touch_Code.PNG"/>
+
+Pada gambar di atas, kita dapat melihat kode program yang digunakan untuk menjalankan rangkaian
+sensor sentuh kita. Seperti biasa, sebelum ``setup``, kita menginisialisasikan terlebih dahulu
+konstanta GPIO yang kita gunakan, dan pada kasus ini, kita mengeset sebuah *threshold*, atau batas.
+
+Mari kita bahas terlebih dahulu mengapa kita membutuhkan sebuah *threshold*. Ketika sensor pertama diinisialisasi,
+maka voltase yang terbaca biasa berada pada kisaran 95-100, dan akan tetap pada kisaran tersebut jika tidak ada hal
+yang didekatkan pada sensor. Hal ini dapat kita ketahui dengan mengakses ``Serial Monitor`` pada ``115200 baud``, karena
+kita telah menginisialisasikan ``Serial.begin(115200)`` dan melakukan ``Serial.println()`` pada setiap loop.
+Akses Serial Monitor dapat dilakukan dengan cara **Tools > Serial Monitor**, kemudian pilih ``115200 baud``.
+
+Ketika sebuah sentuhan menyentuh kabel yang terhubung dengan port yang sedang dibaca dengan ``touchRead``, 
+maka voltase yang terbaca akan berada pada kisaran 0-20. Maka dari itu, kita mengatakan bahwa *sebuah sentuhan telah terdeteksi apabila voltase yang terbaca berada di bawah 20*.
+Inilah kegunaan *threshold* yang akan kita manfaatkan nanti.
+
+Mari lanjut dengan pembahasan kode program. Pada ``setup``, kita menyediakan 3 *output*, yakni
+3 lampu yang telah kita bahas pada bagian sebelumnya. Disini kita juga melakukan ``Serial.begin`` yang
+gunanya adalah memulai Serial Monitor pada kanal 115200, dimana semua perintah ``Serial.println`` akan tercatat di sana.
+Terakhir, delay yang ada berfungsi untuk memberikan waktu bagi program untuk menyiapkan Serial Monitor.
+
+Lalu, mari kita lihat bagian ``loop``. Disini, kita membaca input sentuhan dengan perintah ``touchRead()``. Kita memanggil fungsi ini 
+ke 2 *port* yang telah kita jadikan tempat masuk input ON dan OFF pada bagian skema.
+
+Kemudian, kita lihat nilai yang terbaca. Jika lebih kecil dari threshold, maka artinya ada input sentuhan yang terbaca.
+Kita akan memprint nilai tersebut pada Serial Monitor dengan perintah ``Serial.println``, dan menyalakan/mematikan ketiga lampu
+dengan efek jeda dari fungsi ``delay``. Percabangan pertama berfungsi untuk mematikan lampu, dan percabangan kedua berfungsi untuk
+menyalakan lampu. Perhatikan bahwa percabangan ini **if** yang terpisah, bukan **if-else**. Hal ini karena kita sedang membaca
+2 sumber input yang berbeda, sehingga mereka harus dianggap sebagai 2 kasus yang saling lepas.
+
+### *Hall Sensor*
+<br/>
+<img src="/images/Praktikum/Prak 3/Hall_Code.PNG"/>
+
+Disini kita bisa melihat kode untuk rangkaian implementasi Hall Sensor. Seperti biasa, kita inisialisasikan terlebih dahulu
+variable konstan, dalam kasus ini lampu LED Merah dicolok pada GPIO16, dan lampu LED Kuning dicolok pada GPIO4. Variabel ``val`` akan 
+digunakan untuk membaca input dari sensor.
+
+Pada bagian ``setup``, seperti pada *Touch Sensor*, kita print hasil pembacaan pada Serial Monitor pada kanal 9600, 
+dan mengeset *output* rangkaian pada lampu LED Merah, Kuning, dan Built-In.
+
+Akhirnya, pada bagian ``loop``, kita pertama-tama membaca input magnetis dari ``hallRead`` dan menyimpannya pada ``val``.
+Kita tidak perlu memberikan parameter, karena ia pasti membacanya langsung dari perangkat ESP32. Seperti yang telah dibahas
+pada bagian skema, ada 3 *state* dari rangkaian ini. Jika tidak ada magnet yang sedang didekatkan pada sensor,
+maka hasil yang dibaca akan berada pada kisaran 15-30, dan lampu yang menyala adalah lampu LED Built-in. Jika magnet kutub selatan didekatkan pada sensor, 
+maka voltase yang terbaca akan bernilai di atas 45, dengan lampu merah menyala, dan jika kutub utara yang didekatkan, maka nilainya akan negatif, dengan
+lampu kuning menyala. Berbeda dengan program *Touch Sensor*, kita hanya menerima input dari 1 sensor, maka percabangan yang kita buat merupakan **if-else** dan bukan hanya
+**if**. 
+
+## Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+### *Touch Sensor*
+<br/>
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/gTzWWy_Ou3Y" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 3/Touch_On.jpg" />  
+
+*3 lampu yang menyala akibat sentuhan yang terbaca oleh sensor.*
+<br/>
+
+<img src="/images/Praktikum/Prak 3/Touch_Off.jpg" />
+
+*3 lampu yang mati akibat sentuhan yang terbaca oleh sensor.*
+<br/>
+
+### *Hall Sensor*
+<br/>
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/ufzduIwzSO8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 3/Hall_Builtin.jpg" />
+
+*Lampu LED Built-in yang menyala karena tidak ada benda magnetis yang didekatkan dengan sensor Hall.*
+<br/>
+
+<img src="/images/Praktikum/Prak 3/Hall_RedLight.jpg" />
+
+*Lampu LED Merah yang menyala karena menerima medan magnet dari kutub selatan magnet.*
+<br/>
+
+<img src="/images/Praktikum/Prak 3/Hall_YellowLight.jpg" />
+
+*Lampu LED Kuning yang menyala karena menerima medan magnet dari kutub utara magnet.*
+<br/>
+
+## Analisis & Pembahasan
+
+Mari kita melihat kembali hal yang telah kita pelajari pada *project* kali ini.
+
+Pertama, kita belajar mengenai sensor built-in yang ada pada ESP32, yakni *Touch* (Sentuh) dan *Hall* (Magnetik). Sensor *Touch* diakses
+dengan fungsi ``touchRead`` pada *port* GPIO dengan kabel yang satu sisinya terhubung dengan GPIO tersebut, dan sisi satunya lagi dibiarkan lepas,
+dimana kita sebagai pemberi sentuhan akan berinteraksi dengan sisi yang lepas ini, sedangkan sensor *Hall* diakses dengan fungsi
+``hallRead`` tanpa parameter, dan dibaca ketika kita memberikan medan magnet pada sensor built-in, yang terletak pada bagian tengah
+perangkat ESP32 yang berwarna abu-abu/sedikit gelap. 
+
+Sebetulnya, ESP32 memiliki sensor internal temperatur juga, tetapi hanya untuk mengukur temperatur internal ESP32, dan tidak semua ESP32 dilengkapi
+sensor tersebut, kebetulan perangkat saya tidak ada. 
+
+Kita telah belajar bahwa pada sensor Touch, voltase hasil pembacaan akan berada pada kisaran 95-100 apabila sedang tidak disentuh, 
+dan berada pada kisaran 0-20 apabila disentuh. Di sisi lain, pada sensor Hall, voltase hasil pembacaan akan berada pada
+kisaran 15-30 apabila tidak ada medan magnet di dekatnya, akan bernilai negatif apabila didekatkan kutub utara magnet,
+dan bernilai positif dengan kisaran 40-60 apabila didekatkan kutub selatan magnet. Kita dapat memanfaatkan hasil pembacaan ini
+untuk memanipulasi perangkat/komponen lain pada rangkaian, pada kasus ini kita memanipulasi lampu LED eksternal.
+
+Kita juga telah belajar menggunakan ``Serial Monitor``. Inisialisasinya menggunakan ``Serial.begin()`` diikuti parameter kanal monitor yang kita inginkan.
+Kita kemudian dapat mengakses monitor dengan mengakses **Tools > Serial Monitor** dan melihat hasil pembacaan dengan perintah ``Serial.println()``.
+Selama kita belum memiliki *display* eksternal, Serial Monitor merupakan alternatif yang bagus untuk membantu *debugging*.
+
+Kendala yang saya alami adalah terkadang input sentuh berjalan sendiri meskipun tidak sentuh. Prediksi saya, hal ini mungkin terjadi karena guncangan 
+ketika saya sedang bergerak, sehingga sensor mengira ada input sentuhan. *Bug* ini pun tidak muncul dengan sering, hanya berkala. Selain itu,
+*project* ini masih tergolong cukup mudah. Silakan coba mengikuti!
