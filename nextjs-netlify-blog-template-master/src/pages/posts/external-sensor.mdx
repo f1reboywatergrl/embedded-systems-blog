@@ -1,0 +1,149 @@
+---
+slug: external-sensor
+title: Praktikum 4 - External Sensors in ESP32
+date: 2021-02-15
+author: vincentiussgk
+tags:
+  - ESP32
+  - Sensor
+---
+
+## Overview Praktikum
+
+Pada praktikum kali ini kita akan membuat sebuah project untuk melanjutkan pemahaman mengenai kinerja sensor pada ESP32, 
+dimana kali ini kita akan menggunakan sensor eksternal. Sensor yang akan kita pergunakan pada percobaan ini adalah sensor 
+[BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/).
+
+BME280 merupakan sebuah sensor eksternal, yang dapat membaca 4 hal, antara lain:
+
+- Suhu ruangan 
+- Tekanan ruangan 
+- Aproksimasi ketinggian dari permukaan laut 
+- Kelembaban ruangan
+
+dan dalam percobaan ini, kita akan melihat keempat pembacaan tersebut, dan menampilkannya pada Serial Monitor. Karena ketiga pembacaan
+lainnya sulit untuk dimanipulasi, modifikasi praktikum yang dilakukan kali ini hanyalah menyangkut pembacaan ketinggian. Ketika sensor dan
+ESP32 diangkat 50cm dari posisi semula, maka lampu LED Built-in pada ESP32 akan menyala.
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. BME280 Sensor (1 buah), sebagai penerima sensor, dapat dilihat [disini](https://www.tokopedia.com/marnov/gy-bme280-bme-280-sensor-temperatur-kelembapan-barometric-tekanan-iic?whid=0)
+4. Kabel Female-to-Female (4 buah), sebagai penghubung ESP32 dengan Sensor BME280
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+3. *Library* Adafruit BME280 (dapat diunduh pada Arduino IDE)
+
+## Skema Perangkat Praktikum
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 4/BME280_Schematic.png"/>
+
+<br/>
+
+Rangkaian kali ini cukup sederhana, hanya menyangkut rangkaian ESP32 dan Sensor BME280. BME280 lazimnya memiliki 4 kaki:
+
+- GND
+- 3v3/VIN
+- SCL
+- SDA
+
+dan cara menghubungkan keempat kakinya seperti yang terlihat pada skema. Kebetulan, pada BME280 yang saya miliki, tidak terdapat
+kaki 3v3, tetapi terdapat kaki VIN, yang sama saja. Perhatikan *label*nya, bukan urutan kakinya, karena mungkin urutannya berbeda
+untuk setiap sensor BME280. 
+
+## Langkah Pengerjaan
+
+Pengerjaan praktikum ini mengikuti alur praktikum pada [randomnerdtutorials](https://randomnerdtutorials.com/esp32-bme280-arduino-ide-pressure-temperature-humidity/),
+dengan rincian sebagai berikut:
+
+1. Persiapkan *library* yang dibutuhkan, Adafruit BME280 dan Adafruit Unified Sensor. *Library* ini bisa diakses melalui Arduino IDE,
+lalu membuka **Sketch > Include Library > Manage Libraries**, dan mengetik Adafruit BME280. Kemudian, klik *install all libraries* untuk
+mengunduh semua *library* sekaligus.
+
+2. Setup rangkaian yang dibutuhkan sesuai skema pada bagian sebelumnya. Perhatikan kembali pemasangan kabel antara ESP32 dan BME280.
+
+3. Menulis kode program seperti yang dapat dilihat pada bagian berikutnya, yang merupakan modifikasi dari kode pada
+[randomnerdtutorials](https://randomnerdtutorials.com/esp32-bme280-arduino-ide-pressure-temperature-humidity/).
+
+4. Untuk melihat hasil pembacaan, buka **Tools > Serial Monitor > Channel 9600**.
+
+5. Untuk melihat hasil modifikasi praktikum, naikkan sensor dan ESP32 sebesar 50cm di atas posisi awalnya.
+
+## Kode Program
+<br/>
+<img src="/images/Praktikum/Prak 4/BME280_Code.png"/>
+
+Mari kita bagi pembahasan kode di atas menjadi 3 bagian, *Pre-Setup*, *Setup*, dan *Loop*.
+
+### Pre-Setup
+
+Di sini kita mendeklarasikan variabel yang dibutuhkan, *bme*, yang merupakan sensor BME280 kita, *delayTime*, yang merupakan
+jeda 1 detik yang ditunggu setiap iterasi *loop*, dan akhirnya, *initialAltitude*, yang menyimpan pembacaan awal ketinggian sensor.
+Pembacaan ini akan dipakai untuk menentukan apakah lampu LED built-in akan menyala ketika dinaikkan atau tidak. Kita juga men-define
+SEALEVELPRESSURE_HPA dengan 1013.25 yang akan dipakai untuk mengukur tekanan ruangan.
+
+Selain itu, kita juga meng-*include* beberapa *header* yang merupakaan bawaan dari *library* BME280.
+
+### Setup
+
+Di sini, kita menginisialisasikan kanal Serial Monitor pada 9600, dan kemudian memulai sensor dengan method ``.begin()``.
+Jika pemasangan kita benar, maka kita kemudian akan mengetes Serial Monitor dengan mem-print 'Default Test' pada
+Serial Monitor, dan akhirnya, kita menyimpan ketinggian awal pada ``initialAltitude``.
+
+### Loop
+
+Bagian ``loop`` memanggil 3 fungsi, ``printValues()`` yang merupakan fungsi utama kita, ``delay()`` yang
+memberikan jeda 1 detik, dan ``pinMode()``, yang sebetulnya bisa diletakkan pada bagian ``setup`` dan bukan ``loop``.
+
+Pada ``printValues()``, kita akan memprint nilai Temperatur dari ``bme.readTemperature()``, dalam celcius,
+kemudian membaca Tekanan dari ``bme.readPressure()`` dibagi 100.0F, dengan satuan ``hPa``, 
+lalu aproksimasi ketinggian melalui ``bme.readAltitude(SEALEVELPRESSURE_HPA)``. Jika hasil pembacaan ini
+dikurangi initialAltitude dan nilainya lebih dari 0.5m, maka lampu LED built-in akan menyala.
+Akhirnya, kita membaca kelembaban ruangan dengan ``bme.readHumidity()``, dalam satuan %.
+
+## Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/n0VoSN1QfTE" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 4/BME280_On.jpg" /> 
+
+*Lampu LED Internal yang menyala akibat diangkat 50cm dari posisi awal.*
+
+<br/>
+
+<img src="/images/Praktikum/Prak 4/BME280_Off.jpg" />  
+
+*Lampu LED Internal yang redup ketika dikembalikan ke posisi awal.*
+
+<br/>
+
+<img src="/images/Praktikum/Prak 4/BME280_Reading.PNG" />  
+
+*Contoh hasil pembacaan sensor pada Serial Monitor.*
+
+<br/>
+
+## Analisis & Pembahasan
+
+Pada praktikum ini, kita telah mempelajari cara membaca temperatur, kelembaban, ketinggian, dan kelembaban
+suatu ruangan, menggunakan sensor eksternal BME280. Dengan mengunduh beberapa *library* dan cukup memanfaatkan ESP32,
+kita dapat membaca keempat hal tersebut, dan menampilkannya pada Serial Monitor, menggunakan method-method yang sudah termasuk
+pada *library* BME280.
+
+Kendala yang dialami pada percobaan ini adalah ide modifikasi, karena hasil pembacaan sulit dimanipulasi kecuali ketinggian, maka saya
+kesulitan mencari ide untuk membuat percobaan ini lebih menarik. Bahkan pada pembacaan ketinggian pun, karena hasil pembacaannya merupakan 
+aproksimasi dan fluktuatif, maka sulit mendapatkan hasil yang diinginkan (lampu LED menyala/redup). Selain itu, percobaannya cukup mudah,
+cukup mengikuti tutorial yang ada dan cukup memanfaatkan ESP32 dan sensor.
