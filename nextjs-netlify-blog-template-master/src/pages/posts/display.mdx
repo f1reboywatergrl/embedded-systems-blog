@@ -1,0 +1,213 @@
+---
+slug: display
+title: Praktikum 5 - Display with OLED and ESP32
+date: 2021-02-22
+author: vincentiussgk
+tags:
+  - ESP32
+  - OLED Display
+---
+
+## Overview Praktikum
+
+Pada praktikum kali ini kita akan membuat sebuah project untuk melanjutkan pemahaman mengenai kinerja display dan hubungannya dengan
+ESP32. Kita bisa menggunakan OLED atau LCD I2C, pada percobaan ini saya akan menggunakan layar OLED. 
+
+Kita akan mencoba men-display dua jenis *output*, yakni teks, dan foto. Menampilkan teks cukup mudah, dan dapat diselesaikan
+dengan method ``display.print()``, namun untuk menampilkan gambar, prosesnya sedikit lebih rumit. Setiap langkah percobaan telah saya dokumentasikan
+baik secara teks maupun secara lisan pada video. Mari simak dan ikuti percobaan ini.
+
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. OLED Display (1 buah), sebagai display, perangkat bisa dilihat [disini](https://www.tokopedia.com/marnov/blue-color-128x64-oled-lcd-display-module-0-96-inch-i2c-iic-arduino)
+4. Kabel Female-to-Female (4 buah), sebagai penghubung ESP32 dengan OLED Display 
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+3. *Library* Adafruit SSD1306 (dapat diunduh pada Arduino IDE)
+4. LCD Image Converter ([Download Link](https://sourceforge.net/projects/lcd-image-converter/files/))
+5. Microsoft Paint atau .bmp converter lainnya
+
+## Skema Perangkat Praktikum
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 5/Display_Schematic.png"/>
+
+<br/>
+
+Rangkaian ini juga cukup sederhana, hanya menyangkut rangkaian ESP32 dan OLED Display. OLED Display lazimnya memiliki 4 kaki:
+
+- GND
+- VDD / VCC
+- SCK / SCL
+- SDA
+
+dan cara menghubungkan keempat kakinya seperti yang terlihat pada skema. Pada perangkat saya, label kakinya sedikit berbeda dari yang
+tertera pada skema, jadi seperti percobaan sebelumnya, perhatikan *label*nya, bukan urutannya. Pastikan bahwa label yang benar terkait
+dengan GPIO yang benar. 
+
+## Langkah Pengerjaan
+
+Pengerjaan praktikum ini mengikuti alur praktikum pada [randomnerdtutorials](https://randomnerdtutorials.com/esp32-ssd1306-oled-display-arduino-ide/),
+dengan rincian sebagai berikut:
+
+### *Text Display*
+
+1. Persiapkan *library* yang dibutuhkan, Adafruit SSD1306 dan Adafruit GFX. *Library* ini bisa diakses melalui Arduino IDE,
+lalu membuka **Sketch > Include Library > Manage Libraries**, dan mengetik Adafruit SSD1306. Kemudian, klik *install all libraries* untuk
+mengunduh semua *library* sekaligus.
+
+2. Setup rangkaian yang dibutuhkan sesuai skema pada bagian sebelumnya. Perhatikan kembali pemasangan kabel antara ESP32 dan OLED Display.
+
+3. Menulis kode program seperti yang dapat dilihat pada bagian berikutnya, yang merupakan modifikasi dari kode pada
+[randomnerdtutorials](https://randomnerdtutorials.com/esp32-ssd1306-oled-display-arduino-ide/).
+
+4. Upload program ke ESP32 dan perhatikan layar OLED untuk melihat hasilnya.
+
+### *Picture Display*
+
+1. Ikuti langkah 1-3 seperti pada langkah pengerjaan Text Display.
+
+2. Pilihlah sebuah gambar yang ingin ditampilkan pada layar OLED, dan simpan gambar tersebut pada komputer.
+
+3. Kita akan mengatur ulang ukuran gambarnya. Akses website [Simple Image Resizer](http://www.simpleimageresizer.com/).
+
+4. Pilih gambar sebelumnya dengan mengklik ``Select Image`` dan upload gambar yang telah disimpan.
+
+5. Pilih opsi ``dimensions`` pada pengaturan ukuran gambar, dan atur ukurannya menjadi ``128x64``.
+
+6. Klik tombol ``resize``, lalu tunggu sebentar sampai prosesnya selesai. Setelah itu, klik ``download``,
+dan halaman baru berisi gambar yang telah diganti ukurannya akan muncul.
+
+7. *Copy* gambar tersebut, dan *paste* gambar tersebut pada MS Paint.
+
+8. *Save as* gambar tersebut dengan extension 24-bit Bitmap.
+
+9. *Load* gambar tersebut pada LCD Image Converter dengan cara **File > Open > Pilih foto**.
+
+10. Buka **Options > Conversion**, lalu ubah **Preset** pada halaman **Prepare** menjadi **Monochrome**, dan **Type** pada sebelah kiri menjadi
+**Monochrome** dan **Diffuse Dither**, pastikan pengaturannya sama seperti gambar ini, kemudian klik OK:
+
+<img src="/images/Praktikum/Prak 5/LCDConverterSettings.PNG" />  
+
+11. LCD Image Converter akan menghasilkan sebuah kode C. Klik **File > Convert** dan simpan file C tersebut.
+
+12. Buka file C yang telah disimpan, kemudian ambil **array** yang tersimpan pada file. Array tersebut umumnya memiliki penyimpanan seperti 
+``static const uint8_t image_data_<nama file>[1024]``. Kemudian, copy SEMUA array tersebut beserta isinya dan paste pada kode pada Arduino IDE.
+Letakkan sebelum ``setup``.
+
+13. Masukkan array tersebut pada ``setup`` ketika memanggil metode ``display.drawBitmap()``.
+
+Detail lebih lanjut akan dibahas pada segmen berikutnya, yakni kode program itu sendiri.
+
+## Kode Program
+### *Text Display*
+
+<img src="/images/Praktikum/Prak 5/DisplayText_Code.PNG"/>
+
+Kode di atas merupakan kode untuk menampilkan teks pada OLED, dan strukturnya masih relatif simpel.
+Pertama, kita include semua *library* yang telah kita download. Kita juga bisa mengatur **font** dari 
+tampilan kita dengan cara mengimport sebuah library. Berikut adalah daftar library yang bisa mengubah 
+jenis font pada tampilan:
+
+<img src="/images/Praktikum/Prak 5/FontList.PNG"/>
+
+Untuk mengubah fontnya, cukup tambahkan ``#include <Fonts/ {nama header}>``, dan panggil method ``setFont``
+menjadi ``{nama header}`` tanpa ".h". Kita juga mendefinisikan panjang dan tinggi layar sebagai 128x64 pixels,
+yang kemudian dipakai pada insialisasi ``Adafruit_SSD1206``.
+
+Kemudian, pada bagian setup, kita men-setup sebuah Serial Monitor yang akan menampilkan error apabila 
+terjadi kendala pada OLED kita. Jika tidak, ia akan langsung masuk ke fungsi ``delay``, dan kemudian mempersiapkan
+tampilan OLED dengan mengeset font dengan method ``setFont`` sebagai font yang telah kita import, membersihkan tampilan
+dengan method ``clearDisplay``, mengeset ukuran teks dengan method ``setTextSize``, mengeset warna teks dengan
+``setTextColor``, dan akhirnya, mendefinisikan dimana tulisan akan mulai dicetak dengan ``setCursor``. Jika ingin memprint
+mulai dari bagian paling kiri atas layar, maka parameter bisa diganti menjadi ``setCursor(0,0)``. Kemudian, output "Hello, Embedded
+Systems!" akan dicetak pada layar, seperti yang terlihat pada bagian dokumentasi.
+
+### *Picture Display*
+
+<img src="/images/Praktikum/Prak 5/DisplayPicture_Code.PNG"/>
+
+Disini, karena kode yang berbeda hanya terletak pada bagian ``setup``, maka gambarnya saya crop. Perhatikan bahwa disini kita tidak
+memerlukan perintah ``print`` apapun, melainkan ``drawBitmap``, yang mengambil parameter titik mulai, sebuah array, panjang display,
+tinggi display, dan rotasi. 
+
+Mari kita membahas lebih dalam mengenai ``array`` ini. Array ini berisikan elemen dengan tipe data ``uint8_t``, tetapi hal yang penting 
+untuk diketahui adalah array ini berfungsi untuk memberitahu display bagaimana gambar input yang diinginkan, untuk setiap pixelnya. Cara menghasilkan array ini adalah 
+dengan mengikuti langkah 3-13 pada bagian sebelumnya. Array tersebut akan tampil seperti demikian:
+
+<img src="/images/Praktikum/Prak 5/Array.PNG"/>
+
+dengan tepat 1024 elemen. Kita akan meng-copy SEMUA array ini, dan meletakkannya sebelum bagian setup, seperti ini:
+
+<img src="/images/Praktikum/Prak 5/ArrayInCode.PNG"/>
+
+dan memanggilnya pada ``drawBitmap``. Alasan kita menyimpan fotonya dalam format bitmap, adalah supaya display dapat menginterpretasikan
+gambar kita secara low-level dengan array yang telah dihasilkan tersebut dengan mudah.
+
+Untuk memasukkan foto-foto lainnya, ulangi langkah 3-13 dengan foto yang berbeda-beda, dan pastikan bahwa hasil array yang dihasilkan
+berjumlah 1024 elemen, jika tidak, perhatikan kembali pengaturan yang telah disetel dan sesuaikan dengan petunjuk pada bagian sebelumnya.
+Percobaan dengan 3 foto berbeda dapat dilihat hasilnya pada bagian dokumentasi.
+
+## Dokumentasi dan Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+### *Text Display*
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/BwYL2xtQYok" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 5/TextDisplay.jpg" /> 
+
+*Teks "Hello, Embedded Systems!" yang ditampilkan pada layar OLED.*
+
+<br/>
+
+### *Picture Display*
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/eIIxnNx8KC4" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 5/RecursiveDisplay.jpg" />  
+
+*Layar OLED yang menampilkan gambar pada bagian sebelumnya.*
+
+<br/>
+
+<img src="/images/Praktikum/Prak 5/TrumpDisplay.jpg" />  
+
+*Layar OLED yang menampilkan Presiden Amerika Serikat ke-45, Donald J. Trump.*
+
+<br/>
+
+<img src="/images/Praktikum/Prak 5/LogoDisplay.jpg" />  
+
+*Layar OLED yang menampilkan logo website Embedded Systems Blog.*
+
+<br/>
+
+## Analisis & Pembahasan
+
+Pada praktikum ini, kita telah mempelajari cara mendisplay teks maupun gambar pada OLED. Kita membutuhkan library Adafruit SSD1306 dan Adafruit GFX,
+kemudian kita juga dapat mengimport library font jika kita ingin mengubah jenis font. Kita kemudian mendefinisikan panjang dan lebar layar, yang
+dipakai ketika kita menginisialisasikan layar. Kemudian, pada setup, kita dapat mengeluarkan teks, yang dapat diatur fontnya, ukurannya, warnanya, dan letaknya.
+
+Untuk menampilkan gambar, prosesnya sedikit lebih rumit. Kita perlu menyimpan sebuah gambar dan mengubah gambar tersebut menjadi sebuah array of ``uint8_t`` supaya
+bisa diinterpretasikan oleh layar dengan baik, dan menampilkannya dengan method ``drawBitmap``.
+
+Secara keseluruhan, saya merasa bahwa bagian sulit pada praktikum ini adalah mengubah gambar menjadi array yang dapat dibaca oleh mesin. Prosesnya cukup sulit dan 
+kerap kali saya mendapat hasil dengan array yang luar biasa besar karena kurang teliti melakukan pengaturan maupun salah melakukan *cropping*. Akan tetapi, ketika
+saya mengikuti semua langkah dengan baik, hasilnya dapat tampil pula dengan baik, dan saya merasa bangga akan karya tersebut. Diluar itu, saya merasa praktikum ini 
+tidak sulit dan sangat menarik, karena saya telah menunggu cukup lama untuk bermain dengan Display, dan saya tahu bahwa masih banyak hal-hal yang bisa dioptimasi dari display ini.
+Mari kita jelajahi batas-batas kemampuan display ini pada praktikum-praktikum mendatang.

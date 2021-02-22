@@ -7,3 +7,5 @@ tags:
     name: I/O
   - slug: Sensor
     name: Sensor
+  - slug: OLED Display
+    name: OLED Display
