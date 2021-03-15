@@ -7,7 +7,7 @@ export function SocialList({}) {
     <div>
       <a
         title="GitHub"
-        href={`https://github.com/f1reboywatergrl`}
+        href={`https://github.com/f1reboywatergrl/embedded-systems-code`}
         target="_blank"
         rel="noopener"
       >
