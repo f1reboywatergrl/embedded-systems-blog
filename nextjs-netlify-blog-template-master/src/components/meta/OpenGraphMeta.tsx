@@ -1,7 +1,8 @@
 import Head from "next/head";
 import config from "../../lib/config";
 const siteTitle:string = "Embedded Systems Blog";
-const siteDesc:string = "A compilation of blogs about my activities in the Embedded Systems course.";
+const siteDesc:string = `Take a journey through the world of 
+Embedded Systems through Samuel Gondokusumo's assortment of projects in the course.`;
 type Props = {
   url: string;
   title?: string;

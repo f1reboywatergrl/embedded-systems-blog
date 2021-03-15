@@ -15,7 +15,7 @@ export default function Index() {
           <h1>
             II2260 Embedded Systems Blog
           </h1>
-          <span className="handle">A compilation of blogs about my activities in the Embedded Systems course.</span>
+          <span className="handle">Take a journey through the world of Embedded Systems through Samuel Gondokusumo's assortment of projects in the course.</span>
           <h2>By Samuel Gondokusumo 18219024</h2>
           <SocialList />
         </div>

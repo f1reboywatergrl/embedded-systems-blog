@@ -1,0 +1,141 @@
+---
+slug: bluetooth
+title: Praktikum 7 - Controlling LED using Bluetooth and ESP32
+date: 2021-03-15
+author: vincentiussgk
+tags:
+  - ESP32
+  - LED
+---
+
+## Overview Praktikum
+
+Seperti yang telah dibahas beberapa percobaan yang lalu, ESP32 memiliki banyak fungsionalitas yang sudah *built-in*, seperti
+Hall Sensor, pembaca temperatur internal, dan lampu LED built-in. Pada percobaan ini, akan dieksplorasi lagi sebuah fitur built-in
+pada ESP32, yakni komunikasi via **Bluetooth**. 
+
+Percobaan yang dilakukan akan berupa memanipulasi lampu LED eksternal, baik menyalakan, mematikan, maupun memberikan perintah *blink*,
+melalui perintah teks yang dikirim melalui sebuah *smartphone*.
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. *Smartphone* dengan sistem operasi Android
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+3. Serial Bluetooth Terminal Mobile App ([Play Store Download Link](https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal))
+
+## Skema Perangkat Praktikum
+
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 7/LED_Bluetooth_bb.png"/>
+
+<br/>
+
+Rangkaian ini juga cukup sederhana, hanya menyangkut rangkaian ESP32 dengan sebuah lampu LED eksternal saja. Lampu tersebut akan
+dimanipulasi melalui *smartphone* dengan bantuan aplikasi Serial Bluetooth Terminal.
+
+## Langkah Pengerjaan
+
+1. Download aplikasi Serial Bluetooth Terminal, yang dapat dilihat pada bagian Alat dan Bahan.
+
+2. Rangkailah perangkat sesuai skema yang ada.
+
+3. Upload kode program pada ESP32. Langkah ini akan memungkinkan *smartphone* untuk mengirim permintaan koneksi pada ESP32.
+
+4. Buka aplikasi Serial Bluetooth Terminal, tekan icon 3 garis pada pojok kiri atas, kemudian pilih *Devices*. Jangan lupa untuk menyalakan
+Bluetooth pada *smartphone*.
+
+5. Pilih devais bernama "ESP32test" pada aplikasi dan konfirmasi koneksinya.
+
+6. Sekarang, seharusnya *smartphone* dapat terhubung dengan ESP32. Jika belum terhubung, tekan tombol koneksi (terletak di sebelah kanan atas,
+di sebelah kiri icon tong sampah) untuk mengulang permintaan koneksi. Pastikan juga bahwa ESP32 sudah menyala dengan melihat Serial Monitor
+pada kanal 115200.
+
+7. *Smartphone* sekarang dapat mengirimkan data pada ESP32. Perintah yang dapat dikenal ESP32 (menggunakan kode program di bawah ini) adalah
+``ON``, ``OFF``, dan ``BLINK``.
+
+
+## Kode Program
+
+Kode program pada percobaan ini dibagi menjadi 3 bagian: Setup, Loop, dan executeCommand.
+Kode yang digunakan memiliki fungsionalitas yang sama dengan kode pada [randomnerdtutorials](https://randomnerdtutorials.com/esp32-bluetooth-classic-arduino-ide/),
+namun kode ini memiliki struktur yang berbeda. Kerangka kode yang digunakan dapat diakses pada contoh file
+di Arduino IDE, dengan mengakses **File > Examples > BluetoothSerial > SerialtoSerialBT**.
+
+<br/>
+
+<img src="/images/Praktikum/Prak 7/Setup.PNG"/>
+
+Pertama, mari membahas kode setup yang digunakan. Program ini menginclude sebuah library
+``BluetoothSerial.h``. Library ini tidak perlu didownload ulang, dan bisa langsung digunakan.
+Kita menginstasiasikan ``SerialBT``, yang berlaku sebagai instansi dari Serial Bluetooth built-in pada ESP32.
+Kita kemudian mendeklarasikan beberapa variable, yakni ``command`` yang merupakan string kosong, dimana pada variable ini
+akan disimpan perintah-perintah yang diinput dari *smartphone*, kemudian ``led``, yang seperti biasa,
+merupakan pin pada ESP32 dimana kita akan menghubungkan lampu dengan ESP32.
+
+Pada fungsi ``setup`` sendiri, diinisalisasikan sebuah Serial Monitor pada kanal 115200.
+Kemudian, instansi SerialBT, yang sekali lagi merupakan Bluetooth pada ESP32, akan dinyalakan, dengan nama
+``ESP32test``. Setelah hal itu selesai, maka pemberitahuan bahwa devais sudah siap digunakan akan ditampilkan
+pada Serial Monitor. Akhirnya, karena kita ingin memanipulasi LED, maka kita harus menyiapkan pinMode pada ``led``
+yang telah didefinisikan sebelumnya.
+
+<img src="/images/Praktikum/Prak 7/loop.PNG"/>
+
+Lalu, memasuki fungsi ``loop``, ada 2 pengecekan utama yang dilakukan, yakni apabila Serial (serial monitor) dan
+SerialBT (bluetooth ESP32) saling terkoneksi, dan dapat saling mentrasnfer data. Di sini, kita hanya tertarik pada
+percabangan SerialBT, karena disinilah data dari *smartphone* diterima dan dibaca.
+
+Berikutnya, akan dilakukan *parsing* dari data yang dikirim. Data yang dikirim dari *smartphone* ke ESP32 akan dikirim
+per karakter, bukan per baris, sehingga penyimpanannya akan sedikit lebih rumit. Setiap karakter yang dikirim oleh *smartphone*
+akan berbentuk integer ASCII (misalnya 'A'=65, 'Z'=90). Kita tidak ingin menerima spasi, sehingga kita mengabaikan 13. Kode ASCII
+ini akan dikonversikan/*casting* secara implisit menjadi character, dan jika hasil *casting* tersebut bukan ``\n`` atau newline, maka
+karakter akan ditambahkan pada variable ``command``. Jika newline, maka itu berarti akhir dari pengiriman perintah telah tercapai,
+sehingga fungsi ``executeCommand`` yang menjalankan perintah yang dikirim dapat dipanggil. Setelah pemanggilan perintah,
+maka variable ``command`` akan dikosongkan kembali untuk menerima input yang baru.
+
+<img src="/images/Praktikum/Prak 7/Command.PNG"/>
+
+Disini kita dapat melihat detail implementasi fungsi ``executeCommand``. Akan dilakukan perbandingan
+pada variable ``command``. Jika ``ON``, maka nyalakan lampu LED, dan seterusnya, seperti yang telah
+dieksplorasi pada percobaan-percobaan sebelumnya. Akhirnya, jika terdapat perintah yang tidak
+dikenal, maka berikan pesan error.
+
+## Dokumentasi dan Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/X6bjTZO1MZs" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 7/On.jpg" /> 
+
+*Lampu LED yang menyala akibat perintah dari smartphone*.
+
+<br/>
+
+<img src="/images/Praktikum/Prak 7/Off.jpg" /> 
+
+*Lampu LED yang mati akibat perintah dari smartphone*.
+
+## Analisis & Pembahasan
+
+Pada praktikum ini, kita telah melihat cara ESP32 berkomunikasi dengan devais eksternal
+melalui media Bluetooth. Akan terbentuk sebuah koneksi antara kedua media, dimana data akan dikirim dalam bentuk ``integer`` ASCII
+per karakter, yang kemudian dapat dikonversikan kembali ke karakter.
+Menggunakan koneksi ini, kita dapat mengirim perintah dari *smartphone* menuju ESP32 untuk melakukan sesuatu. 
+
+Meskipun contoh yang diberikan pada percobaan ini relatif sederhana,
+tetapi percobaan ini dapat menjadi fondasi untuk percobaan lainnya yang lebih kompleks,
+seperti menyalakan lampu dari *smartphone* dengan ESP32. Mari menerobos batas-batas ESP32
+pada praktikum-praktikum selanjutnya.
