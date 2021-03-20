@@ -1,0 +1,123 @@
+---
+slug: wifi-comm
+title: Praktikum 8 - Controlling LED using WiFi and ESP32
+date: 2021-03-20
+author: vincentiussgk
+tags:
+  - ESP32
+  - LED
+---
+
+## Overview Praktikum
+
+Pada percobaan kali ini, kita akan mengeksplorasi lagi mengenai fungsionalitas pada ESP32 yang sudah built-in, yakni berkomunikasi
+melalui Wi-Fi dan membuat sebuah laman web sederhana. 
+
+Percobaan yang akan dilakukan masih dalam bentuk manipulasi lampu LED, menyalakan/mematikan dua lampu yang berbeda dengan
+menekan tombol pada laman web yang dibuah oleh ESP32.
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+
+## Skema Perangkat Praktikum
+
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 8/Schematic.png"/>
+
+<br/>
+
+Seperti kedua rangkaian sebelumnya, rangkaian ini juga cukup sederhana, hanya menyangkut rangkaian ESP32 dengan dua lampu LED eksternal. 
+Lampu tersebut akan dimanipulasi melalui *button* yang ada pada laman web yang dibuat oleh ESP32, dimana datanya akan dikirim melalui Wi-Fi.
+
+## Langkah Pengerjaan
+
+1. Rangkailah perangkat sesuai skema yang ada.
+
+2. Masukkan kredensial Wi-Fi pada kode dan upload kode program pada ESP32. 
+
+3. Pantau Serial Monitor kanal 115200, dan tunggu sampai terdapat pesan "Wi-Fi Connected" dan terlihat IP Addressnya.
+
+4. Jika sudah terkoneksi, salinlah IP Address pada Serial Monitor, dan akseslah alamat tersebut
+pada devais lain yang terhubung dengan Wi-Fi yang sama. Devais ini tidak harus merupakan komputer yang meng-upload kodenya
+pada ESP32, yang penting terhubung dengan Wi-Fi yang sama.
+
+5. Manipulasi terhadap lampu LED dapat dilakukan dengan menekan/mengklik tombol yang sesuai.
+
+## Kode Program
+
+Kode program pada percobaan ini cukup panjang, sehingga hanya beberapa bagian yang dibahas. Kode lengkap dapat dilihat pada tautan
+[berikut](https://github.com/f1reboywatergrl/embedded-systems-code/blob/main/WifiComm/WifiComm.ino).
+
+<img src="/images/Praktikum/Prak 8/variables.PNG"/>
+
+Kode ini merupakan bagian pada deklarasi variabel. Bagian ssid dan password silakan diubah dengan ssid
+dan password Wi-Fi masing-masing, dan pastikan input tersebut benar. Kemudian, akan dilakukan setup web Server
+pada port 80.
+
+<img src="/images/Praktikum/Prak 8/setup.PNG"/>
+
+Pada bagian ``setup``, setelah menginisialisasi Serial Monitor pada 115200 dan mengeset pinMode seperti biasa,
+akan dibuka koneksi pada Wi-Fi dengan kredensial yang telah diinput tadi. Apabila sukses, akan tercetak "WiFi connected",
+berserta alamat lokal IP. Alamat ini penting, karena akan digunakan untuk mengakses web server dan laman HTML yang akan dibuat 
+pada bagian berikutnya.
+
+<img src="/images/Praktikum/Prak 8/initialpage.PNG"/>
+
+Pada bagian ini, pertama dilakukan terlebih dahulu pengecekan apabila server maupun klien bisa menciptakan
+koneksi bersama. Jika ya, maka byte yang tersalurkan akan dicetak pada Serial Monitor, serta disimpan dalam variabel
+``header``. Apabila terdapat sebuah byte dengan karakter ``'\n'``, maka hal itu menandakan bahwa klien harus mengirimkan respons,
+yang ditandakan dengan 4 baris print pada client.
+
+Kemudian, membaca hasil header yang dikirim dari ESP32, dapat ditentukan perintah yang dikirim dari client yang mengakses laman web.
+Hasil pembacaan tersebut dapat langsung disesuaikan dengan keluaran yang diinginkan, misalnya, apabila perintahnya
+``/26/on``, maka nyalakan lampu. Hal ini dapat dilihat pada URL ketika mengakses web server ESP32, misalnya demikian.
+
+<img src="/images/Praktikum/Prak 8/urlexample.PNG"/>
+
+URL ini akan berubah setiap kali tombol ``Turn LED On/Off`` ditekan, dengan cara menambahkan tag ``<a href>`` yang akan me-redirect ke halaman
+dengan header tambahan yang diinginkan, misalnya demikian. 
+
+<img src="/images/Praktikum/Prak 8/href.PNG"/>
+
+Akhirnya, setiap kali selesai membaca perintah, maka header akan dibersihkan, supaya dapat membaca perintah baru.
+
+## Dokumentasi dan Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/x0UI5SnLuME" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 8/26On.jpg" /> 
+
+*Lampu LED pada GPIO 26 yang menyala dan LED pada GPIO 27 yang mati akibat manipulasi pada Web Server ESP32*.
+
+<br/>
+
+<img src="/images/Praktikum/Prak 8/27On.jpg" /> 
+
+*Lampu LED pada GPIO 27 yang menyala dan LED pada GPIO 26 yang mati akibat manipulasi pada Web Server ESP32*.
+
+## Analisis & Pembahasan
+
+Pada praktikum ini, kita telah melihat cara membuat sebuah web server sederhana menggunakan ESP32 yang terhubung dengan Wi-Fi.
+Halaman web menggunakan HTML ini dapat diakses dengan devais manapun yang terkoneksi dengan Wi-Fi yang sama dengan ESP32,
+dimana kita dapat mengirim perintah dari client yang terhubung dengan web server tersebut kepada ESP32. ESP32 akan membaca
+perintah yang dikirim melalui ``header`` (bagian dari URL) yang terbaca secara per-byte, dan dapat memakai informasi tersebut untuk
+menjalankan perintah seperti menyalakan lampu LED.
+
+Dengan dasar-dasar ESP32 yang sudah semakin menguat, pada percobaan berikutnya, akan dibuat sebuah percobaan yang lebih kompleks,
+yang akan memadukan konsep-konsep yang telah dipelajari sebelumnya. Mari terus berusaha mencoba dan menerobosi batas-batas mikrokontroler tercinta kita ini.
