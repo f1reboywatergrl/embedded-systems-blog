@@ -1,6 +1,6 @@
 ---
 slug: bluetooth
-title: Praktikum 7 - Controlling LED using Bluetooth and ESP32
+title: Praktikum 7 - Controlling LED using Bluetooth/BLE and ESP32
 date: 2021-03-15
 author: vincentiussgk
 tags:
@@ -17,6 +17,9 @@ pada ESP32, yakni komunikasi via **Bluetooth**.
 Percobaan yang dilakukan akan berupa memanipulasi lampu LED eksternal, baik menyalakan, mematikan, maupun memberikan perintah *blink*,
 melalui perintah teks yang dikirim melalui sebuah *smartphone*.
 
+Untuk mendalami pemahaman mengenai Bluetooth, juga akan dilakukan percobaan menggunakan **Bluetooth Low Energy** (BLE) yang akan
+berkomunikasi dengan *smartphone*.
+
 ## Alat dan Bahan
 
 Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
@@ -30,6 +33,7 @@ Sedangkan perangkat lunak yang dibutuhkan adalah:
 1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
 2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
 3. Serial Bluetooth Terminal Mobile App ([Play Store Download Link](https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal))
+4. nRF Connect For Mobile ([Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp)) ([iOS App Store](https://itunes.apple.com/us/app/nrf-connect/id1054362403?mt=8))
 
 ## Skema Perangkat Praktikum
 
@@ -43,7 +47,11 @@ Berikut adalah daftar skema perangkat keras pada percobaan ini.
 Rangkaian ini juga cukup sederhana, hanya menyangkut rangkaian ESP32 dengan sebuah lampu LED eksternal saja. Lampu tersebut akan
 dimanipulasi melalui *smartphone* dengan bantuan aplikasi Serial Bluetooth Terminal.
 
+Untuk bagian BLE, hanya dibutuhkan ESP32 nya saja.
+
 ## Langkah Pengerjaan
+
+### Bluetooth
 
 1. Download aplikasi Serial Bluetooth Terminal, yang dapat dilihat pada bagian Alat dan Bahan.
 
@@ -63,8 +71,26 @@ pada kanal 115200.
 7. *Smartphone* sekarang dapat mengirimkan data pada ESP32. Perintah yang dapat dikenal ESP32 (menggunakan kode program di bawah ini) adalah
 ``ON``, ``OFF``, dan ``BLINK``.
 
+### Bluetooth Low Energy
+
+1. Download aplikasi nRF Connect For Mobile, yang dapat dilihat pada bagian Alat dan Bahan.
+
+2. Upload kode program pada ESP32.
+
+3. Buka aplikasi nRF Connect, pilih menu Bonded. Disini akan tampil server BLE yang telah dibuat, jika mengikuti kode program
+di bagian berikutnya maka carilah server dengan nama ``BLE Server``.
+
+4. Tekan Connect.
+
+5. Buka bagian Unknown Service > Unknown Characteristic.
+
+6. Tekan tombol yang mengarah ke bawah untuk mendownload data dari server.
+
+7. Hasil pengiriman data dapat dilihat pada *smartphone*.
 
 ## Kode Program
+
+### Bluetooth
 
 Kode program pada percobaan ini dibagi menjadi 3 bagian: Setup, Loop, dan executeCommand.
 Kode yang digunakan memiliki fungsionalitas yang sama dengan kode pada [randomnerdtutorials](https://randomnerdtutorials.com/esp32-bluetooth-classic-arduino-ide/),
@@ -109,9 +135,21 @@ pada variable ``command``. Jika ``ON``, maka nyalakan lampu LED, dan seterusnya,
 dieksplorasi pada percobaan-percobaan sebelumnya. Akhirnya, jika terdapat perintah yang tidak
 dikenal, maka berikan pesan error.
 
+### Bluetooth Low Energy
+
+<img src="/images/Praktikum/Prak 7/blecode.PNG"/>
+
+Untuk BLE, bagian yang penting hanyalah pada setup. Masukkan nama server yang diinginkan pada bagian ``BLEDevice::init()``.
+Program kemudian akan membuat server dengan sebuah ID, dengan karakteristik yang dapat kita tentukan. Pada 
+kode ini, ditentukan bahwa BLE dapat melakukan proses Read maupun Write. Kemudian, pesan yang dikirim ke client
+dapat diatur pada method ``pCharacteristic->setValue()``. BLE kemudian akan meng "advertise" dirinya, sehingga
+dapat dikoneksikan ke perangkat lain melalui bluetooth.
+
 ## Dokumentasi dan Video Demo
 
 Hasil percobaan ini dapat dilihat sebagai berikut.
+
+### Bluetooth
 
 <iframe width="476" height="267.75" src="https://www.youtube.com/embed/X6bjTZO1MZs" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 <br/>
@@ -128,10 +166,21 @@ Hasil percobaan ini dapat dilihat sebagai berikut.
 
 *Lampu LED yang mati akibat perintah dari smartphone*.
 
+### Bluetooth Low Energy
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/gf8XPfPIhb0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 7/hello.PNG" /> 
+
+*Pesan dari ESP32 yang terkirim ke smartphone dengan sukses*.
+
 ## Analisis & Pembahasan
 
 Pada praktikum ini, kita telah melihat cara ESP32 berkomunikasi dengan devais eksternal
-melalui media Bluetooth. Akan terbentuk sebuah koneksi antara kedua media, dimana data akan dikirim dalam bentuk ``integer`` ASCII
+melalui media Bluetooth maupun BLE. Akan terbentuk sebuah koneksi antara kedua media, dimana data akan dikirim dalam bentuk ``integer`` ASCII
 per karakter, yang kemudian dapat dikonversikan kembali ke karakter.
 Menggunakan koneksi ini, kita dapat mengirim perintah dari *smartphone* menuju ESP32 untuk melakukan sesuatu. 
 
