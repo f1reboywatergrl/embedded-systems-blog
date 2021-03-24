@@ -9,3 +9,5 @@ tags:
     name: Sensor
   - slug: OLED Display
     name: OLED Display
+  - slug: Web Server
+    name: Web Server

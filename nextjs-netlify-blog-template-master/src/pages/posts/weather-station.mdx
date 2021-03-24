@@ -1,0 +1,107 @@
+---
+slug: weather-station
+title: Praktikum 9 - Simple Weather Station with ESP32 and BME280
+date: 2021-03-24
+author: vincentiussgk
+tags:
+  - ESP32
+  - Web Server
+  - Sensor
+---
+
+## Overview Praktikum
+
+Pada percobaan kali ini, kita akan membuat perangkat yang relatif lebih kompleks dari sebelumnya dengan menggabungkan pengetahuan
+yang telah didapat. Perangkat yang dibuat adalah **Weather Station dengan Web Server**, yakni melampirkan pembacaan dari sensor
+eksternal BME280 pada halaman web berbasis HTML yang terkoneksikan pada Web Server dari ESP32.
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. BME280 Sensor (1 buah), sebagai penerima sensor, dapat dilihat [disini](https://www.tokopedia.com/marnov/gy-bme280-bme-280-sensor-temperatur-kelembapan-barometric-tekanan-iic?whid=0)
+4. Kabel Female-to-Female (4 buah), sebagai penghubung ESP32 dengan Sensor BME280
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+3. *Library* Adafruit BME280 (dapat diunduh pada Arduino IDE)
+4. *Library* Adafruit Unified Sensor (dapat diunduh pada Arduino IDE)
+
+## Skema Perangkat Praktikum
+
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 4/BME280_Schematic.png"/>
+
+<br/>
+
+Sama seperti rangkaian pada percobaan sensor eksternal, perangkat keras yang digunakan hanyalah ESP32 dan BME280
+dengan *wiring* yang serupa pula.
+
+## Langkah Pengerjaan
+
+1. Rangkailah perangkat sesuai skema yang ada.
+
+2. Masukkan kredensial Wi-Fi pada kode dan upload kode program pada ESP32. 
+
+3. Pantau Serial Monitor kanal 115200, dan tunggu sampai terdapat pesan "Wi-Fi Connected" dan terlihat IP Addressnya.
+
+4. Jika sudah terkoneksi, salinlah IP Address pada Serial Monitor, dan akseslah alamat tersebut
+pada devais lain yang terhubung dengan Wi-Fi yang sama. Devais ini tidak harus merupakan komputer yang meng-upload kodenya
+pada ESP32, yang penting terhubung dengan Wi-Fi yang sama.
+
+5. Akan tampak pembacaan dari sensor BME280. Untuk memperbarui pembacaan tersebut, laman web dapat di-*refresh* dengan menekan
+tombol F5 atau mengklik tombol *refresh*.
+
+## Kode Program
+
+Kode program pada percobaan ini juga cukup panjang, sehingga hanya beberapa bagian yang dibahas. Kode lengkap dapat dilihat pada tautan
+[berikut](https://github.com/f1reboywatergrl/embedded-systems-code/blob/main/WeatherStation/WeatherStation.ino).
+
+<img src="/images/Praktikum/Prak 9/Setup.PNG"/>
+
+Pada bagian ``setup``, hal yang dipersiapkan merupakan gabungan dari [Percobaan 4](https://ii2260-18219024.vercel.app/posts/external-sensor) dan 
+[Percobaan 8](https://ii2260-18219024.vercel.app/posts/wifi-comm). Selain itu, disimpan terlebih dahulu pembacaan awal dalam variable ``max`` dari
+masing-masing pembacaan, untuk dibandingkan dengan pembacaan-pembacaan berikutnya.
+
+<img src="/images/Praktikum/Prak 9/Loop.PNG"/>
+
+Pada bagian ``loop``, sama seperti Percobaan 8, akan dilakukan loop selama koneksi masih terjalin
+dan tidak terdapat *timeout*. Jika pengiriman data sukses, akan dibalas dengan kode 200 OK.
+
+
+<img src="/images/Praktikum/Prak 9/Table.PNG"/>
+
+Bagian di atas merupakan bagian tabel penyajian data pembacaan dari BME280. Pertama dilakukan pembacaan dari BME280, lalu apabila lebih besar daripada
+pembacaan sebelumnya, nilai ``max`` dari masing-masing variabel akan di-*overwrite* dengan pembacaan yang baru. Pembacaan ini akan ditampilkan melalui
+HTML yang dikirim oleh client melalui method ``client.println()``.
+
+## Dokumentasi dan Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/EIuIh9iQIww" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 9/HTMLDisplay.PNG" /> 
+
+*Contoh hasil pembacaan BME280 yang ditampilkan pada Web Server, berikut nilai maksimum masing-masing pembacaan*.
+
+
+## Analisis & Pembahasan
+
+Pada praktikum kali ini, kita telah berhasil membuat rangkaian yang lebih kompleks, sebagai hasil gabungan pemahaman kita mengenai
+Sensor Eksternal, Web Server, dan Wi-Fi. Hal yang menggabungkan antara Web Server dengan pembacaan sensor adalah pengiriman HTML
+melalui client ke server (ESP32), sehingga hasil tersebut dapat ditampilkan dengan baik.
+
+Ternyata, penggabungan komponen-komponen ini tidak terlalu sulit apabila kita sudah mengerti
+fondasi dari masing-masing komponennya, misalnya rangkaian yang sama persis dengan Percobaan 4, dan kode program inisialisasi server
+yang sangat mirip dengan Percobaan 8. Dari percobaan ini, kita dapat beranjak ke sistem-sistem yang bahkan lebih kompleks lagi. Pada
+percobaan berikutnya, kita akan mencoba mengintegrasikan pembacaan data ini ke dalam suatu basis data.
