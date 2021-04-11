@@ -1,0 +1,437 @@
+---
+slug: database
+title: Praktikum 10 - Uploading Weather Readings to Online Database
+date: 2021-04-11
+author: vincentiussgk
+tags:
+  - ESP32
+  - Sensor
+---
+
+## Overview Praktikum
+
+Pada percobaan sebelumnya, kita telah mencoba mengintegrasikan pembacaan dari ESP32 dengan teknologi Web, dimana kita membuat
+halaman HTML sederhana pada alamat IP lokal, dimana hasil pembacaan akan ditampilkan pada laman tersebut. 
+
+Pada percobaan ini, prosedur yang dilakukan kurang lebih sama secara tampak depan, tetapi perbadaannya adalah hasil 
+pembacaan ini dapat diakses siapa saja karena terletak pada sebuah domain tetap, dengan sebuah basis data yang tetap pula. 
+Namun, sebenarnya, di balik layar, proses yang dilakukan lebih kompleks daripada percobaan sebelumnya. Mari kita coba.
+
+## Alat dan Bahan
+
+Pada pengerjaan projek ini, perangkat keras yang dibutuhkan adalah:
+
+1. ESP32 DEVKIT V1 Board (1 buah), sebagai perangkat keras utama praktikum
+2. Kabel Micro-USB (1 buah), sebagai penghubung antara perangkat ESP32 dengan komputer
+3. BME280 Sensor (1 buah), sebagai penerima sensor, dapat dilihat [disini](https://www.tokopedia.com/marnov/gy-bme280-bme-280-sensor-temperatur-kelembapan-barometric-tekanan-iic?whid=0)
+4. Kabel Female-to-Female (4 buah), sebagai penghubung ESP32 dengan Sensor BME280
+
+Sedangkan perangkat lunak yang dibutuhkan adalah:
+
+1. Arduino IDE ([Download Link](https://www.arduino.cc/en/software))
+2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
+3. *Library* Adafruit BME280 (dapat diunduh pada Arduino IDE)
+4. *Library* Adafruit Unified Sensor (dapat diunduh pada Arduino IDE)
+## Skema Perangkat Praktikum
+
+Berikut adalah daftar skema perangkat keras pada percobaan ini.
+
+<br/>
+<img src="/images/Praktikum/Prak 4/BME280_Schematic.png"/>
+
+<br/>
+
+Sama seperti rangkaian pada percobaan sensor eksternal, perangkat keras yang digunakan hanyalah ESP32 dan BME280
+dengan *wiring* yang serupa pula.
+
+## Langkah Pengerjaan
+
+Ada beberapa penyedia *hosting website* yang dapat digunakan untuk mengupload kode PHP dan basis data MySQL yang akan digunakan.
+Pada pembahasan ini, kita akan memakai layanan dari [000webhost](https://www.000webhost.com/).
+
+1. Masuk ke pranala yang sudah disediakan di atas, dan klik Sign Up.
+
+2. Buatlah sebuah akun, dan verifikasi akun yang telah dibuat melalui email.
+
+<img src="/images/Praktikum/Prak 10/Other.PNG"/>
+
+3. Menu di atas akan tampil. Pilih Other. 
+
+4. Masukkan kredensial website, lalu pada menu selanjutnya pilihlah Upload Site.
+
+<img src="/images/Praktikum/Prak 10/FileManager.PNG"/>
+
+5. Pada menu utama, pilihlah situs yang telah dibuat, kemudian masuklah ke dalam File Manager seperti pada gambar di atas.
+
+6. Masukkan kembali kredensial jika dibutuhkan. Apabila Anda terkena loop dan tidak bisa masuk, coba akses ulang halaman tersebut melalui
+menu utama.
+
+<img src="/images/Praktikum/Prak 10/MainFileManager.PNG"/>
+
+7. Menu selanjutnya seharusnya akan seperti demikian, jika sudah bisa diakses. Masuklah ke dalam folder ``public_html``, kemudian 
+buatlah 2 file baru, bernama ``post-esp-data.php`` dan ``esp-data.php``. Copy-and-paste lah isi kode dari bagian berikutnya ke dalam
+file-file ini.
+
+8. Sekarang, mari membuat basis datanya. Kembalilah ke menu utama seperti pada gambar di langkah 5, lalu akseslah ``Tools``
+pada bagian kiri layar, lalu klik ``Database Manager``.
+
+9. Klik ``New Database`` atau ``Create Database``, dan masukkan kredensial yang diinginkan.
+
+10. Setelah basis data selesai di-generate, masuklah ke dalam basis data tersebut dengan **Manage > PhpMyAdmin**.
+
+<img src="/images/Praktikum/Prak 10/PhpMyAdmin.PNG"/>
+
+11. Akseslah basis data sesuai dengan nama yang telah dipilih, seperti pada gambar di atas dimana saya menamakan basis data saya "database".
+
+12. Pilihlah menu SQL dan copy-and-pastelah kode SQL pada bagian Kode Program.
+
+13. Setelah query selesai, kembalilah ke menu utama dan copy-and-pastelah ketiga kredensial basis data kembali pada ``post-esp-data.php`` dan ``esp-data.php``.
+
+14. Sekarang, saatnya berpindah ke Arduino IDE tercinta. Copy-and-pastelah kode pada bagian Kode Program, dan jangan lupa mengganti nama SSID dan password Wi-Fi.
+Tak hanya itu, masukkanlah domain web yang telah dibuat dengan tambahan ``/post-esp-data.php``, misalnya ``http://18219024-database.000webhostapp.com/post-esp-data.php``.
+Perhatikan bahwa protokolnya adalah HTTP dan bukan HTTPS.
+
+15. Uploadlah kode program dan akseslah domain website dengan tambahan ``/esp-data.php``, misalnya ``http://18219024-database.000webhostapp.com/esp-data.php``.
+
+## Kode Program
+
+Kode program pada bagian ini cukup banyak, sehingga semua kode akan ditampilkan dan dibahas kegunaannya secara sekilas saja. Selengkapnya dapat dibaca pada
+pranala [berikut](https://randomnerdtutorials.com/esp32-esp8266-mysql-database-php/).
+
+### ``post-esp-data.php``
+
+```
+<?php
+
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp32-esp8266-mysql-database-php/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+*/
+
+$servername = "localhost";
+
+// REPLACE with your Database name
+$dbname = "REPLACE_WITH_YOUR_DATABASE_NAME";
+// REPLACE with Database user
+$username = "REPLACE_WITH_YOUR_USERNAME";
+// REPLACE with Database user password
+$password = "REPLACE_WITH_YOUR_PASSWORD";
+
+// Keep this API Key value to be compatible with the ESP32 code provided in the project page. 
+// If you change this value, the ESP32 sketch needs to match
+$api_key_value = "tPmAT5Ab3j7F9";
+
+$api_key= $sensor = $location = $value1 = $value2 = $value3 = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $api_key = test_input($_POST["api_key"]);
+    if($api_key == $api_key_value) {
+        $sensor = test_input($_POST["sensor"]);
+        $location = test_input($_POST["location"]);
+        $value1 = test_input($_POST["value1"]);
+        $value2 = test_input($_POST["value2"]);
+        $value3 = test_input($_POST["value3"]);
+        
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } 
+        
+        $sql = "INSERT INTO SensorData (sensor, location, value1, value2, value3)
+        VALUES ('" . $sensor . "', '" . $location . "', '" . $value1 . "', '" . $value2 . "', '" . $value3 . "')";
+        
+        if ($conn->query($sql) === TRUE) {
+            echo "New record created successfully";
+        } 
+        else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    
+        $conn->close();
+    }
+    else {
+        echo "Wrong API Key provided.";
+    }
+
+}
+else {
+    echo "No data posted with HTTP POST.";
+}
+
+function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+```
+
+Kode program di atas digunakan untuk mengunggah pembacaan sensor dari ESP32 pada basis data yang telah dibuat. Setelah koneksi antara ESP32 dengan web server terbuat,
+akan dilakukan query SQL INSERT pada basis data. Hasil ini akan dibaca oleh script berikutnya. Pada bagian ini, jangan lupa untuk mengganti kredensial basis data 
+dengan kredensial yang telah dibuat.
+
+### ``esp-data.php``
+
+```
+<!DOCTYPE html>
+<html><body>
+<?php
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp32-esp8266-mysql-database-php/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+*/
+
+$servername = "localhost";
+
+// REPLACE with your Database name
+$dbname = "REPLACE_WITH_YOUR_DATABASE_NAME";
+// REPLACE with Database user
+$username = "REPLACE_WITH_YOUR_USERNAME";
+// REPLACE with Database user password
+$password = "REPLACE_WITH_YOUR_PASSWORD";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+} 
+
+$sql = "SELECT id, sensor, location, value1, value2, value3, reading_time FROM SensorData ORDER BY id DESC";
+
+echo '<table cellspacing="5" cellpadding="5">
+      <tr> 
+        <td>ID</td> 
+        <td>Sensor</td> 
+        <td>Location</td> 
+        <td>Value 1</td> 
+        <td>Value 2</td>
+        <td>Value 3</td> 
+        <td>Timestamp</td> 
+      </tr>';
+ 
+if ($result = $conn->query($sql)) {
+    while ($row = $result->fetch_assoc()) {
+        $row_id = $row["id"];
+        $row_sensor = $row["sensor"];
+        $row_location = $row["location"];
+        $row_value1 = $row["value1"];
+        $row_value2 = $row["value2"]; 
+        $row_value3 = $row["value3"]; 
+        $row_reading_time = $row["reading_time"];
+        // Uncomment to set timezone to - 1 hour (you can change 1 to any number)
+        //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time - 1 hours"));
+      
+        // Uncomment to set timezone to + 4 hours (you can change 4 to any number)
+        //$row_reading_time = date("Y-m-d H:i:s", strtotime("$row_reading_time + 4 hours"));
+      
+        echo '<tr> 
+                <td>' . $row_id . '</td> 
+                <td>' . $row_sensor . '</td> 
+                <td>' . $row_location . '</td> 
+                <td>' . $row_value1 . '</td> 
+                <td>' . $row_value2 . '</td>
+                <td>' . $row_value3 . '</td> 
+                <td>' . $row_reading_time . '</td> 
+              </tr>';
+    }
+    $result->free();
+}
+
+$conn->close();
+?> 
+</table>
+</body>
+</html>
+```
+
+Kode program di atas adalah kode untuk men-display hasil pembacaan yang telah tersimpan pada basis data ke halaman web. Akan dibuat sebuah koneksi pada basis data,
+kemudian setiap baris data yang ada akan dijadikan baris pada tampilan HTML yang dapat dilihat user, seperti pada gambar di bagian Dokumentasi. Pada bagian ini, 
+jangan lupa juga untuk mengganti kredensial basis data dengan kredensial yang telah dibuat.
+
+### ``SQL Query``
+
+```
+CREATE TABLE SensorData (
+    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sensor VARCHAR(30) NOT NULL,
+    location VARCHAR(30) NOT NULL,
+    value1 VARCHAR(10),
+    value2 VARCHAR(10),
+    value3 VARCHAR(10),
+    reading_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)
+```
+
+Query di atas adalah query yang dijalankan pada laman PhpMyAdmin. Query tersebut digunakan untuk membuat tabel SensorData yang menyimpan data pembacaan ESP32, yang nanti
+akan diupload ke tabel ini.
+
+### Kode ESP32
+
+```
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp32-esp8266-mysql-database-php/
+  
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files.
+  
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+*/
+
+#ifdef ESP32
+  #include <WiFi.h>
+  #include <HTTPClient.h>
+#else
+  #include <ESP8266WiFi.h>
+  #include <ESP8266HTTPClient.h>
+  #include <WiFiClient.h>
+#endif
+
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+// Replace with your network credentials
+const char* ssid     = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+// REPLACE with your Domain name and URL path or IP address with path
+const char* serverName = "http://example.com/post-esp-data.php";
+
+// Keep this API Key value to be compatible with the PHP code provided in the project page. 
+// If you change the apiKeyValue value, the PHP file /post-esp-data.php also needs to have the same key 
+String apiKeyValue = "tPmAT5Ab3j7F9";
+
+String sensorName = "BME280";
+String sensorLocation = "Office";
+
+/*#include <SPI.h>
+#define BME_SCK 18
+#define BME_MISO 19
+#define BME_MOSI 23
+#define BME_CS 5*/
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+
+Adafruit_BME280 bme;  // I2C
+//Adafruit_BME280 bme(BME_CS);  // hardware SPI
+//Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);  // software SPI
+
+void setup() {
+  Serial.begin(115200);
+  
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting");
+  while(WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  // (you can also pass in a Wire library object like &Wire2)
+  bool status = bme.begin(0x76);
+  if (!status) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring or change I2C address!");
+    while (1);
+  }
+}
+
+void loop() {
+  //Check WiFi connection status
+  if(WiFi.status()== WL_CONNECTED){
+    HTTPClient http;
+    
+    // Your Domain name with URL path or IP address with path
+    http.begin(serverName);
+    
+    // Specify content-type header
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    
+    // Prepare your HTTP POST request data
+    String httpRequestData = "api_key=" + apiKeyValue + "&sensor=" + sensorName
+                          + "&location=" + sensorLocation + "&value1=" + String(bme.readTemperature())
+                          + "&value2=" + String(bme.readHumidity()) + "&value3=" + String(bme.readPressure()/100.0F) + "";
+    Serial.print("httpRequestData: ");
+    Serial.println(httpRequestData);
+    
+    // You can comment the httpRequestData variable above
+    // then, use the httpRequestData variable below (for testing purposes without the BME280 sensor)
+    //String httpRequestData = "api_key=tPmAT5Ab3j7F9&sensor=BME280&location=Office&value1=24.75&value2=49.54&value3=1005.14";
+
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(httpRequestData);
+     
+    // If you need an HTTP request with a content type: text/plain
+    //http.addHeader("Content-Type", "text/plain");
+    //int httpResponseCode = http.POST("Hello, World!");
+    
+    // If you need an HTTP request with a content type: application/json, use the following:
+    //http.addHeader("Content-Type", "application/json");
+    //int httpResponseCode = http.POST("{\"value1\":\"19\",\"value2\":\"67\",\"value3\":\"78\"}");
+        
+    if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+    // Free resources
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+  //Send an HTTP POST request every 30 seconds
+  delay(30000);  
+}
+```
+
+Akhirnya, kode ini adalah kode yang di-upload ke ESP32. Seperti biasa, jangan lupa untuk memasukkan kredesial WiFi, dan kali ini, ubahlah juga nilai variable
+serverName menjadi domain dengan akhiran ``/post-esp-data.php``, karena pranala tersebut adalah *endpoint* yang akan digunakan untuk mengunggah data. Sisa dari 
+kode ini masih cukup mirip dengan percobaan sebelumnya, yakni membaca pembacaan sensor dan mengirimnya melalui HTTP request pada pranala yang diberikan, dengan delay
+sesuai spesifikasi, dalam kasus ini adalah 30 detik.
+
+## Dokumentasi dan Video Demo
+
+Hasil percobaan ini dapat dilihat sebagai berikut.
+
+<iframe width="476" height="267.75" src="https://www.youtube.com/embed/Bsgk01wFaZg" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<br/>
+
+<br/>
+
+<img src="/images/Praktikum/Prak 10/readings.jpg" /> 
+
+*Hasil pembacaan sensor yang tersimpan pada website*.
+
+<br/>
+
+## Analisis & Pembahasan
+
+Praktikum ini cukup sulit pada bagian setupnya, namun sudah terlihat bagimana kita dapat mengimplementasikan ilmu-ilmu yang telah dipelajari ke sebuah aplikasi nyata
+yang kini dapat diakses siapa saja (dapat terlihat bahwa inti kegunaan ESP32 masih sama dengan percobaan sebelumnya). Meskipun setupnya sulit, dengan sebuah layanan
+*hosting* berbayar, mungkin akan lebih mudah, namun tutorial ini lebih ditujukan kepada individu yang lebih tertarik akan sisi eksplorasinya. Individu yang memiliki dasar
+pemrograman berbasis web, basis data, PHP, dan cloud computing bahkan dapat berkarya dengan lebih leluasa. Kita di sini tidak takut
+akan tantangan, namun menghadapinya dengan penuh semangat dan menaklukkannya secara sistematis. Setelah semua perjuangan dan percobaan yang telah dilalui, 
+pada percobaan berikutnya, akan kita coba melakukan visualisasi data dari pembacaan data. Mari terus berjuang!
