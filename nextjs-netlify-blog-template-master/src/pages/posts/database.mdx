@@ -32,6 +32,7 @@ Sedangkan perangkat lunak yang dibutuhkan adalah:
 2. USB to UART Driver ([Download Link](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers))
 3. *Library* Adafruit BME280 (dapat diunduh pada Arduino IDE)
 4. *Library* Adafruit Unified Sensor (dapat diunduh pada Arduino IDE)
+
 ## Skema Perangkat Praktikum
 
 Berikut adalah daftar skema perangkat keras pada percobaan ini.
@@ -100,7 +101,7 @@ pranala [berikut](https://randomnerdtutorials.com/esp32-esp8266-mysql-database-p
 
 ### ``post-esp-data.php``
 
-```
+```php
 <?php
 
 /*
@@ -180,7 +181,7 @@ dengan kredensial yang telah dibuat.
 
 ### ``esp-data.php``
 
-```
+```php
 <!DOCTYPE html>
 <html><body>
 <?php
@@ -265,7 +266,7 @@ jangan lupa juga untuk mengganti kredensial basis data dengan kredensial yang te
 
 ### ``SQL Query``
 
-```
+```sql
 CREATE TABLE SensorData (
     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     sensor VARCHAR(30) NOT NULL,
@@ -282,7 +283,7 @@ akan diupload ke tabel ini.
 
 ### Kode ESP32
 
-```
+```cpp
 /*
   Rui Santos
   Complete project details at https://RandomNerdTutorials.com/esp32-esp8266-mysql-database-php/
